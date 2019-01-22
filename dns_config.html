@@ -1,0 +1,369 @@
+<html>
+
+<head>
+    
+    <style>
+    body{
+        width: 1000px;
+        margin: 0 auto;
+        font-family: 'Courier New', Courier, monospace;
+    }
+
+    .explanation{
+        margin: 1em 0;
+        padding-top: 2em;
+    }
+
+    .codeblock{
+        margin: 1em 0;
+        padding: 1em;
+        background: #121212;
+        color: white;
+        white-space: pre-wrap;
+        border-radius: 5px;
+    }
+
+    .blue{
+        color: blue;
+        font-weight: bold;
+    }
+
+    .green{
+        color: green;
+        font-weight: bold;
+    }
+
+    .yellow{
+        color: yellow;
+        font-weight: bold;
+    }
+
+    .red{
+        color: red;
+        font-weight: bold;
+    }
+    </style>
+
+</head>
+
+<body>
+
+
+    <h3>DNS</h3>
+
+    <img src="plan.PNG" width="100%" />
+
+    <div class="codeblock">
+    ls /etc/bind
+    </div>
+    
+    <div class="explanation">Überprüfen ob Datei Richtig heisst</div>
+
+    <div class="codeblock"> 
+    less /etc/bind/rndc.key
+    </div>
+    
+    <div class="codeblock">
+    nano /etc/bind/named.conf.local
+    </div>
+    
+    <div class="codeblock">
+    include "/etc/bind/rndc.key";
+    
+    zone "ppa.dmz" {
+        type master;
+        file "/etc/bind/db.ppa.dmz";
+    };
+    
+    zone "220.168.192.in-addr.arpa" {
+        type master;
+        file "/etc/bind/db.192.168.220";
+    };
+    
+    zone "<span class="blue">ppa.int</span>"{
+        type master;
+        file "/var/cache/bind/db.<span class="blue">ppa.int</span>";
+        allow-update {key "rndc-key";};
+    };
+    
+    zone "210.168.192.in-addr.arpa" {
+        type master;
+        file "/var/cache/bind/db.192.168.210";
+        allow-update {key "rndc-key";};
+    };
+    </div>
+    
+    <div class="codeblock">
+    ls /var/cache/bind/
+    </div>
+    
+    <div class="codeblock">
+    cp /var/cache/bind/db.hofer.intern /var/cache/bind/db.<span class="blue">ppa.int</span>
+    </div>
+    
+    <div class="codeblock">
+    nano /var/cache/bind/db.<span class="blue">ppa.int</span>
+    </div>
+    
+    <div class="codeblock">
+
+    ; BIND data file for local loopback interface
+    ;
+    $TTL    604800
+    @       IN      SOA(
+                            <span class="green">ppf</span>.<span class="blue">ppa.int</span>.            ; MName-Feld primärer Masterser$
+                            root.<span class="blue">ppa.int</span>.   ; Mailadresse des Admin @=.
+                            2019011101      ; Serial
+                                604800         ; Refresh
+                                86400         ; Retry
+                            2419200         ; Expire
+                                604800 )       ; Negative Cache TTL
+    ;
+    @       IN      NS      <span class="green">ppf</span>.<span class="blue">ppa.int</span>.
+    
+    www     IN      A       192.168.210.<span class="yellow">51</span>
+    <span class="green">ppf</span>     IN      A       192.168.210.<span class="yellow">51</span>
+        
+    </div>
+    
+     <div class="codeblock">
+    ifconfig
+     </div>
+    
+    <div class="codeblock">
+    nano /etc/network/interface
+    </div>
+    
+    <div class="codeblock">
+    # This file describes the network interfaces available on your system
+    # and how to activate them. For more information, see interfaces(5).
+    
+    source /etc/network/interfaces.d/*
+    
+    # The loopback network interface
+    auto lo
+    iface lo inet loopback
+    
+    # The primary network interface
+    auto eth0
+    iface eth0 inet static
+           address 192.168.210.<span class="yellow">51</span>
+           netmask 255.255.255.0
+           network 192.168.210.0
+           broadcast 192.168.210.255
+           gateway 192.168.210.1
+           # dns-* options are implemented by the resolvconf package, if installed
+           dns-nameservers 192.168.210.<span class="yellow">51</span>
+           dns-search <span class="blue">ppa.int</span> ppa.dmz
+    
+    </div>
+    
+    <div class="codeblock">
+    cp /var/cache/bind/db.<span class="blue">ppa.int</span> /var/cache/bind/db.192.168.210
+    </div>
+    
+    <div class="codeblock">
+    nano /var/cache/bind/db.192.168.210
+    </div>
+    
+    <div class="codeblock">
+    ;
+    ; BIND data file for local loopback interface
+    ;
+    $TTL    604800
+    @       IN      SOA(
+                            <span class="green">ppf</span>.<span class="blue">ppa.int</span>.            ; MName-Feld primärer Masterserver
+                            root.<span class="blue">ppa.int</span>.   ; Mailadresse des Admin @=.
+                            2019011101      ; Serial
+                             604800         ; Refresh
+                              86400         ; Retry
+                            2419200         ; Expire
+                             604800 )       ; Negative Cache TTL
+    ;
+    @       IN      NS      <span class="green">ppf</span>.<span class="blue">ppa.int</span>.
+    
+    <span class="yellow">51</span>      IN      PTR     www.<span class="blue">ppa.int</span>.
+    <span class="yellow">51</span>      IN      PTR     <span class="green">ppf</span>.<span class="blue">ppa.int</span>.
+    </div>
+    
+    <div class="codeblock">
+    cp /var/cache/bind/db.<span class="blue">ppa.int</span> /etc/bind/db.ppa.dmz
+    </div>
+    
+    <div class="codeblock">
+    nano /etc/bind/db.ppa.dmz
+    </div>
+    
+    <div class="codeblock">
+    ;
+    ; BIND data file for local loopback interface
+    ;
+    $TTL    604800
+    @       IN      SOA(
+                            <span class="green">ppf</span>.<span class="blue">ppa.int</span>.            ; MName-Feld primärer Masterserver
+                            root.<span class="blue">ppa.int</span>.   ; Mailadresse des Admin @=.
+                            2019011101      ; Serial
+                             604800         ; Refresh
+                              86400         ; Retry
+                            2419200         ; Expire
+                             604800 )       ; Negative Cache TTL
+    ;
+    @       IN      NS      <span class="green">ppf</span>.<span class="blue">ppa.int</span>.
+    
+    pps2    IN      A       192.168.220.<span class="red">5</span>
+    </div>
+    
+    <div class="codeblock">
+    cp /etc/bind/db.ppa.dmz /etc/bind/db.192.168.220
+    </div>
+    
+    <div class="codeblock">
+    nano /etc/bind/db.192.168.220
+    </div>
+    
+    <div class="codeblock">
+    ;
+    ; BIND data file for local loopback interface
+    ;
+    $TTL    604800
+    @       IN      SOA(
+                            <span class="green">ppf</span>.<span class="blue">ppa.int</span>.            ; MName-Feld primärer Masterserver
+                            root.<span class="blue">ppa.int</span>.   ; Mailadresse des Admin @=.
+                            2019011101      ; Serial
+                             604800         ; Refresh
+                              86400         ; Retry
+                            2419200         ; Expire
+                             604800 )       ; Negative Cache TTL
+    ;
+    @       IN      NS      <span class="green">ppf</span>.<span class="blue">ppa.int</span>.
+    
+    5       IN      PTR     pps2.ppa.dmz.
+    </div>
+    
+    <div class="codeblock">
+    systemctl restart bind9
+    </div>
+    
+    <div class="codeblock">
+    journalctl -xe
+    </div>
+    
+    <div class="codeblock">
+    nano /etc/bind/named.conf.options
+    </div>
+    
+    <div class="codeblock">
+    options {
+            directory "/var/cache/bind";
+            forwarders {    8.8.8.8;
+                            4.4.4.4;};
+    
+            allow-query {192.168.0.0/16;};
+    
+            dnssec-validation auto;
+    
+            auth-nxdomain no;    # conform to RFC1035
+            listen-on-v6 { any; };
+    };
+    </div>
+    
+    <div class="codeblock">
+    ifdown && ifup
+    </div>
+    
+     <div class="codeblock">
+    init 6
+     </div>
+    
+    
+    
+    <h3>DHCP</h3>
+    
+    <div class="codeblock">
+    nano /etc/dhcp/dhcpd.conf
+    </div>
+    
+    <div class="codeblock">
+    include "/etc/bind/rndc.key";
+    ddns-update-style interim;
+    ddns-updates on;
+    ignore client-updates;
+    update-static-leases on;
+
+    default-lease-time 600;
+    max-lease-time 7200;
+    authoritative;
+    log-facility local7;
+
+    option domain-name "<span class="blue">ppa.int</span>";
+    option domain-name-servers 192.168.210.51;
+    option routers 192.168.210.1;
+    option broadcast-address 192.168.210.255;
+
+    subnet 192.168.210.0 netmask 255.255.255.0 {
+        range 192.168.210.150 192.168.210.160;
+    }
+
+    host vmLs4 {
+        hardware ethernet 0:0:c0:5d:bd:95;
+        fixed-address 192.168.210.91;
+    }
+    zone <span class="blue">ppa.int</span> {
+        primary 192.168.210.51;
+        key "rndc-key";
+    }
+
+    </div>
+
+     <div class="codeblock">
+    systemctl restart isc-dhcp-server
+     </div>
+
+    <h3>Apache</h3>
+
+    <div class="codeblock">
+    cp /etc/apache2/sites-available/www.hofer.intern.conf /etc/apache2/sites-available/www.<span class="blue">ppa.int</span>.conf
+    </div>
+    
+    <div class="codeblock">
+    nano /etc/apache2/sites-available/www.<span class="blue">ppa.int</span>.conf
+    </div>
+
+    <div class="codeblock">
+    
+        &#60;VirtualHost *:80&#62;
+            ServerName www.<span class="blue">ppa.int</span>
+            DocumentRoot /var/www.<span class="blue">ppa.int</span>
+
+            &#60;Directory "/var/www/<span class="blue">ppa.int</span>"&#62;
+                Require all granted
+            &#60;/Directory&#62;
+
+        &#60;/VirtualHost&#62;
+
+    </div>
+
+    <div class="codeblock">
+    mkdir /var/www/<span class="blue">ppa.int</span>
+    </div>
+
+    <div class="codeblock">
+    nano /var/www/<span class="blue">ppa.int</span>/index.html
+    </div>
+
+    <div class="codeblock">
+    a2ensite www.<span class="blue">ppa.int</span>
+    </div>
+    
+    
+    
+    
+     
+    
+    
+    
+
+
+</body>
+
+</html>
